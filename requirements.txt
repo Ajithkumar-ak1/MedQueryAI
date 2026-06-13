@@ -1,0 +1,15 @@
+langchain
+langchain-community
+langchain-core
+langchain-groq
+sentence-transformers==2.2.2
+pinecone[grpc]
+langchain-pinecone
+pypdf
+python-dotenv
+fastapi
+uvicorn
+python-multipart
+tqdm
+numpy
+pinecone-text
