@@ -22,3 +22,7 @@ while True:
             f"- {source['source']} "
             f"(Page {source['page']})"
         )
+    print("\nMETRICS")
+
+    for k, v in result["metrics"].items():
+        print(f"{k}: {v:.3f}s")

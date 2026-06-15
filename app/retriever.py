@@ -1,10 +1,12 @@
 import os
 import re
+import time
 from dotenv import load_dotenv
 from pinecone import Pinecone
 from langchain_huggingface import HuggingFaceEmbeddings
 from sentence_transformers import CrossEncoder
 load_dotenv()
+
 
 
 embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
@@ -20,13 +22,21 @@ def keyword_score(query, text):
     return len(query_words.intersection(text_words))
 
 
-def hybrid_search(query,top_k=20,rerank_top_k=5):
+def hybrid_search(query,top_k=10,rerank_top_k=5):
+    metrics = {}
+    start = time.perf_counter()
+
     query_embedding = embeddings.embed_query(query)
+    metrics["embedding_time"] = (time.perf_counter() - start)
+
+    start = time.perf_counter()
     results = index.query(
         vector=query_embedding,
         top_k=top_k,
         include_metadata=True
     )
+
+    metrics["retrieval_time"] = (time.perf_counter() - start)
     candidates = []
 
     for match in results["matches"]:
@@ -56,6 +66,8 @@ def hybrid_search(query,top_k=20,rerank_top_k=5):
 
     candidates.sort(key=lambda x: x["hybrid_score"],reverse=True)
     candidates = candidates[:10]
+
+    start = time.perf_counter()
     pairs = [
         (query, doc["text"])
         for doc in candidates
@@ -66,16 +78,19 @@ def hybrid_search(query,top_k=20,rerank_top_k=5):
         show_progress_bar=False
     )
 
+    metrics["rerank_time"] = (
+        time.perf_counter() - start
+    )
+
     for doc, score in zip(candidates,rerank_scores):
         doc["rerank_score"] = float(score)
 
     candidates.sort(key=lambda x: x["rerank_score"],reverse=True)
-    return candidates[:rerank_top_k]
+    return candidates[:rerank_top_k],  metrics
 
 
-def retrieve_context(query,top_k=20,rerank_top_k=5):
-
-    docs = hybrid_search(
+def retrieve_context(query,top_k=10,rerank_top_k=5):
+    docs, metrics = hybrid_search(
         query=query,
         top_k=top_k,
         rerank_top_k=rerank_top_k
@@ -86,4 +101,4 @@ def retrieve_context(query,top_k=20,rerank_top_k=5):
         for doc in docs
     )
 
-    return context, docs
+    return context, docs, metrics   

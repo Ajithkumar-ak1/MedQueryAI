@@ -1,5 +1,6 @@
 import os
 import re
+import time
 from dotenv import load_dotenv
 from groq import Groq
 from retriever import retrieve_context
@@ -136,20 +137,25 @@ Answer:
 
 
 def ask_medivault(query):
+    total_start = time.perf_counter()
     rewritten_query = rewrite_query(query)
 
     print(f"\nRewritten Query: "
 f"{rewritten_query}"
     )
 
-    context, docs = retrieve_context(
+    context, docs, retrieval_metrics = retrieve_context(
         rewritten_query
     )
 
+    generation_start = time.perf_counter()
     answer = generate_answer(
         rewritten_query,
         context
     )
+
+    generation_time = (time.perf_counter() - generation_start)
+    total_time = (time.perf_counter() - total_start)
 
     chat_history.append({
         "user": query,
@@ -176,5 +182,10 @@ f"{rewritten_query}"
         "original_query": query,
         "rewritten_query": rewritten_query,
         "answer": answer,
-        "sources": sources
+        "sources": sources,
+        "metrics": {
+            **retrieval_metrics,
+            "generation_time": generation_time,
+            "total_time": total_time
+        }
     }
