@@ -19,7 +19,6 @@ if not PINECONE_API_KEY:
 
 
 def load_pdf_file(data_path):
-
     loader = DirectoryLoader(
         data_path,
         glob="*.pdf",
@@ -62,7 +61,6 @@ if INDEX_NAME not in existing_indexes:
             region="us-east-1"
         )
     )
-
 print("Pinecone index ready")
 
 
@@ -75,9 +73,7 @@ print(f"Created {len(chunks)} chunks")
 
 pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
 index = pc.Index(os.getenv("PINECONE_INDEX_NAME"))
-
 vectors = []
-
 print("Creating embeddings...")
 
 for i, chunk in enumerate(chunks):
@@ -105,15 +101,10 @@ BATCH_SIZE = 100
 print("Uploading to Pinecone...")
 
 for i in range(0, len(vectors), BATCH_SIZE):
-
     batch = vectors[i:i + BATCH_SIZE]
-
     index.upsert(vectors=batch)
-
     print(f"Uploaded {min(i+BATCH_SIZE, len(vectors))}/{len(vectors)}")
-
     time.sleep(0.5)
 
 print("Upload complete!")
-
 print(index.describe_index_stats())
