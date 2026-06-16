@@ -178,6 +178,18 @@ f"{rewritten_query}"
                 "page": doc["page"]
             })
 
+    print("\n" + "=" * 50)
+    print("MEDIVAULT AI METRICS")
+    print("=" * 50)
+
+    for metric, value in retrieval_metrics.items():
+        print(f"{metric:<20}: {value:.3f}s")
+
+    print(f"{'generation_time':<20}: {generation_time:.3f}s")
+    print(f"{'total_time':<20}: {total_time:.3f}s")
+
+    print("=" * 50 + "\n")
+
     return {
         "original_query": query,
         "rewritten_query": rewritten_query,
